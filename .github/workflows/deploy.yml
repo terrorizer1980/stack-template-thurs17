@@ -1,0 +1,58 @@
+name: Deploy to Github Pages
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    environment:
+       name: development
+       url: ${{ steps.get-url.outputs.your_site }}
+
+    name: "deploy nextjs app to ghpages"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: use node.js 
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: '.nvmrc'
+          registry-url: https://registry.npmjs.org/
+
+      - name: build
+        run: |
+          npm install
+          npm run build
+          npm run env -- next export -o build
+      - name: deploy
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: build
+          CLEAN: true
+      - name: Website URL
+        run: |
+          echo "Website URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+      - name: Wait for website to come online
+        timeout-minutes: 10
+        id: get-url
+        run: |
+          echo "Waiting for the website to come alive..."
+          URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          sleep 20
+          STATUS_CODE=$(curl -o /dev/null -s -w "%{http_code}\n" $URL)
+          echo "STATUSCODE: $STATUS_CODE"
+          while [ $STATUS_CODE -ne 200 ]
+          do
+            sleep 10
+            STATUS_CODE=$(curl -o /dev/null -s -w "%{http_code}\n" $URL)
+            echo "STATUSCODE: $STATUS_CODE"
+          done
+          echo "Website is up and running..."
+          echo "Browse here: $URL"
+          echo "::set-output name=your_site::$URL"
