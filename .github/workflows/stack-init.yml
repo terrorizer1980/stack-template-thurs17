@@ -21,7 +21,7 @@ jobs:
           persist-credentials: false
           
       - name: 2 - Setup Node to use the chosen version
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ github.event.inputs.NODE_VERSION }}
           registry-url: https://registry.npmjs.org/
@@ -31,7 +31,7 @@ jobs:
           npx create-next-app nextjs-scaffold --use-npm --example "https://github.com/vercel/next-learn/tree/master/basics/learn-starter"
           cp -r nextjs-scaffold/* .
           rm -rf nextjs-scaffold
-          echo ${{ github.event.inputs.NODE_VERSION }} > .nmvrc
+          echo ${{ github.event.inputs.NODE_VERSION }} > .nvmrc
           
       - name: 4 - Configure Git so that we can commit code to the repsitory
         run: |
